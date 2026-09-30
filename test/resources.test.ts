@@ -36,21 +36,32 @@ describe('PawpadoClient', () => {
     await h.client.sessions.poll();
     expect(h.captured[0]!.url).toContain('/api/v1/sessions/poll');
   });
-  it('credits.topup POSTs', async () => {
-    await h.client.credits.topup({ amountCents: 50000 });
+  it('credits.topup POSTs an IDR amount, or USD cents', async () => {
+    await h.client.credits.topup({ amountIdr: 100_000 });
+    await h.client.credits.topup({ amountUsdCents: 1_000 });
     expect(h.captured[0]!.url).toContain('/api/v1/credits/topup');
+    expect(JSON.parse(h.captured[0]!.body!)).toEqual({ amountIdr: 100_000 });
+    expect(JSON.parse(h.captured[1]!.body!)).toEqual({ amountUsdCents: 1_000 });
   });
-  it('settings.update PATCHes', async () => {
-    await h.client.settings.update({ autoStopMinutes: 30 });
+  it('settings.update PATCHes the fields the server reads', async () => {
+    await h.client.settings.update({ idleAutoStopMinutes: null, playMode: 'moonlight', launchOptions: { fps: 60 } });
     expect(h.captured[0]!.method).toBe('PATCH');
+    expect(JSON.parse(h.captured[0]!.body!)).toEqual({ idleAutoStopMinutes: null, playMode: 'moonlight', launchOptions: { fps: 60 } });
   });
-  it('admin.reconcile POSTs', async () => {
-    await h.client.admin.reconcile();
-    expect(h.captured[0]!.url).toContain('/api/v1/admin/reconcile');
+  it('sessions.pair POSTs the PIN', async () => {
+    await h.client.sessions.pair({ pin: '1234' });
+    expect(JSON.parse(h.captured[0]!.body!)).toEqual({ pin: '1234' });
   });
-  it('account.delete DELETEs', async () => {
+  it('billing.resizeStorage POSTs the new size', async () => {
+    await h.client.billing.resizeStorage({ storageGb: 200 });
+    expect(h.captured[0]!.method).toBe('POST');
+    expect(JSON.parse(h.captured[0]!.body!)).toEqual({ storageGb: 200 });
+  });
+  it('account.delete POSTs the typed confirmation', async () => {
     await h.client.account.delete();
-    expect(h.captured[0]!.method).toBe('DELETE');
+    expect(h.captured[0]!.method).toBe('POST');
+    expect(h.captured[0]!.url).toContain('/api/v1/account/delete');
+    expect(JSON.parse(h.captured[0]!.body!)).toEqual({ confirm: 'DELETE' });
   });
   it('attaches Bearer from apiKey', async () => {
     await h.client.sessions.poll();

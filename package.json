@@ -1,6 +1,6 @@
 {
   "name": "@forjio/pawpado-node",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Official Node.js SDK for Pawpado \u2014 single-user AWS GPU gaming portal. Sessions (start/stop/poll/pair/connect), credits (me/topup), billing (storage), settings, admin (reconcile/orphans). Powered by @forjio/sdk's Bearer auth (Huudis device flow).",
   "type": "module",
   "main": "./dist/index.cjs",
