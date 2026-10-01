@@ -7,7 +7,7 @@ export interface ApigenTransport {
   apigenRequest(method: string, path: string, query: Record<string, unknown> | undefined, body: unknown): Promise<unknown>;
 }
 
-/** All 38 feature routes of the Pawpado API. */
+/** All 42 feature routes of the Pawpado API. */
 export class GeneratedApi {
   constructor(private readonly client: ApigenTransport) {}
 
@@ -220,25 +220,52 @@ export class GeneratedApi {
     return this.call("GET", `/api/v1/stream/apps`, {}, undefined);
   }
 
-  /** Add an endpoint; the response carries its signing secret once. (POST /api/v1/webhooks) */
-  webhooksCreate(input: { "url": string; "events"?: unknown[]; [field: string]: unknown }): Promise<unknown> {
+  /** Add a subscription: an https `url` (not a private, loopback or link-local address) and `events` — "*", event types from GET /api/v1/webhooks/event-types, or prefixes like "pawpado.session.*" (default  (POST /api/v1/webhooks) */
+  webhooksCreate(input?: { "url"?: string; "events"?: unknown; [field: string]: unknown }): Promise<unknown> {
     const all: Record<string, unknown> = { ...(input ?? {}) };
     const query: Record<string, unknown> = {};
     return this.call("POST", `/api/v1/webhooks`, query, all);
   }
 
-  /** Remove an endpoint. (DELETE /api/v1/webhooks/{id}) */
+  /** Remove a subscription (and its delivery log). (DELETE /api/v1/webhooks/{id}) */
   webhooksDelete(id: string): Promise<unknown> {
     return this.call("DELETE", `/api/v1/webhooks/${encodeURIComponent(id)}`, {}, undefined);
   }
 
-  /** The workspace's webhook endpoints. (GET /api/v1/webhooks) */
+  /** The delivery log, newest first: one row per event per subscription, with its status (pending, succeeded, failed), attempt count, next retry, the body sent (`payload`) and every attempt made (`attemptL (GET /api/v1/webhooks/deliveries) */
+  webhooksDeliveries(input?: { "limit"?: number; "status"?: string; "cursor"?: string; "subscriptionId"?: string; "type"?: string }): Promise<unknown> {
+    const all: Record<string, unknown> = { ...(input ?? {}) };
+    const query: Record<string, unknown> = {};
+    query["limit"] = all["limit"]; delete all["limit"];
+    query["status"] = all["status"]; delete all["status"];
+    query["cursor"] = all["cursor"]; delete all["cursor"];
+    query["subscriptionId"] = all["subscriptionId"]; delete all["subscriptionId"];
+    query["type"] = all["type"]; delete all["type"];
+    return this.call("GET", `/api/v1/webhooks/deliveries`, query, undefined);
+  }
+
+  /** One more attempt now, at a failed delivery (or to send a succeeded one again). (POST /api/v1/webhooks/deliveries/{deliveryId}/retry) */
+  webhooksDeliveriesRetry(deliveryId: string): Promise<unknown> {
+    return this.call("POST", `/api/v1/webhooks/deliveries/${encodeURIComponent(deliveryId)}/retry`, {}, undefined);
+  }
+
+  /** Every event type Pawpado delivers, with what it means: what a subscription's `events` can name (besides "*" and prefixes such as "pawpado.session.*"). (GET /api/v1/webhooks/event-types) */
+  webhooksEventTypes(): Promise<unknown> {
+    return this.call("GET", `/api/v1/webhooks/event-types`, {}, undefined);
+  }
+
+  /** One delivery, with every attempt made at it. (GET /api/v1/webhooks/deliveries/{deliveryId}) */
+  webhooksGetDeliveries(deliveryId: string): Promise<unknown> {
+    return this.call("GET", `/api/v1/webhooks/deliveries/${encodeURIComponent(deliveryId)}`, {}, undefined);
+  }
+
+  /** The workspace's webhook subscriptions, each with its failure streak (consecutiveFailures, failingSince) and, when Pawpado switched it off for failing, disabledAt and disabledReason. (GET /api/v1/webhooks) */
   webhooksList(): Promise<unknown> {
     return this.call("GET", `/api/v1/webhooks`, {}, undefined);
   }
 
-  /** Pause or resume an endpoint. (PATCH /api/v1/webhooks/{id}) */
-  webhooksUpdate(id: string, input: { "active": boolean; [field: string]: unknown }): Promise<unknown> {
+  /** Change a subscription: `url`, `events`, `active` (only the ones given). (PATCH /api/v1/webhooks/{id}) */
+  webhooksUpdate(id: string, input?: { "url"?: string; "events"?: unknown; "active"?: boolean; [field: string]: unknown }): Promise<unknown> {
     const all: Record<string, unknown> = { ...(input ?? {}) };
     const query: Record<string, unknown> = {};
     return this.call("PATCH", `/api/v1/webhooks/${encodeURIComponent(id)}`, query, all);

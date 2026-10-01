@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.0
+- `verifyWebhook(rawBody, signatureHeader, secret)` returns a webhook delivery's event (`PawpadoWebhookEvent`: `id`, `type`, `occurredAt`, `workspaceId`, `data`) or throws `PawpadoWebhookError`; `verifyWebhookSignature(...)` answers true/false. Both check `Pawpado-Signature` (`t=…,v1=…`) over the raw body and refuse a timestamp more than 5 minutes off (`toleranceSeconds`).
+- `client.api`: the webhook delivery log and the event catalogue — `webhooksDeliveries({ subscriptionId, status, type, limit, cursor })`, `webhooksGetDeliveries(deliveryId)`, `webhooksDeliveriesRetry(deliveryId)`, `webhooksEventTypes()`; `webhooksUpdate(id, { url, events, active })` takes `url` and `events` as well as `active` (regenerated).
+
 ## 0.2.0
 - `client.api.<area><Action>(...)`: every Pawpado feature route, one method each, generated from
   the API spec (`src/api.generated.ts`, made by `scripts/apigen.sh`). `client.api` keeps the raw
